@@ -5,11 +5,23 @@
  */
 
 import path from 'node:path';
+import * as fs from 'node:fs';
+
+function findProjectRoot(): string {
+  let dir = __dirname;
+  while (dir !== path.dirname(dir)) {
+    if (fs.existsSync(path.join(dir, 'gemini-extension.json'))) {
+      return dir;
+    }
+    dir = path.dirname(dir);
+  }
+  throw new Error(
+    `Could not find project root containing gemini-extension.json. Traversed up from ${__dirname}.`,
+  );
+}
 
 // Construct an absolute path to the project root.
-// __dirname will be /path/to/project/src (in dev) or /path/to/project/dist (in prod).
-// In both cases, going up one level gives us the project root.
-export const PROJECT_ROOT = path.join(__dirname, '..', '..');
+export const PROJECT_ROOT = findProjectRoot();
 export const ENCRYPTED_TOKEN_PATH = path.join(
   PROJECT_ROOT,
   'gemini-cli-workspace-token.json',
