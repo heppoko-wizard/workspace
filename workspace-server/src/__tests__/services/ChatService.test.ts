@@ -135,6 +135,34 @@ describe('ChatService', () => {
       expect(JSON.parse(result.content[0].text)).toEqual(mockResponse);
     });
 
+    it('should send a message to a thread in a space', async () => {
+      const mockResponse = {
+        name: 'spaces/space1/messages/msg1',
+        text: 'Hello in thread!',
+        thread: { name: 'spaces/space1/threads/thread1' },
+      };
+
+      mockChatAPI.spaces.messages.create.mockResolvedValue({
+        data: mockResponse,
+      });
+
+      const result = await chatService.sendMessage({
+        spaceName: 'spaces/space1',
+        message: 'Hello in thread!',
+        threadName: 'spaces/space1/threads/thread1',
+      });
+
+      expect(mockChatAPI.spaces.messages.create).toHaveBeenCalledWith({
+        parent: 'spaces/space1',
+        messageReplyOption: 'REPLY_MESSAGE_FALLBACK_TO_NEW_THREAD',
+        requestBody: {
+          text: 'Hello in thread!',
+          thread: { name: 'spaces/space1/threads/thread1' },
+        },
+      });
+      expect(JSON.parse(result.content[0].text)).toEqual(mockResponse);
+    });
+
     it('should handle message sending errors', async () => {
       const apiError = new Error('Failed to send message');
       mockChatAPI.spaces.messages.create.mockRejectedValue(apiError);
@@ -508,6 +536,45 @@ describe('ChatService', () => {
         parent: 'spaces/dm123',
         requestBody: {
           text: 'Hello!',
+        },
+      });
+
+      const response = JSON.parse(result.content[0].text);
+      expect(response).toEqual(mockMessage);
+    });
+
+    it('should send a direct message in a thread', async () => {
+      const mockSpace = {
+        name: 'spaces/dm123',
+        spaceType: 'DIRECT_MESSAGE',
+      };
+
+      const mockMessage = {
+        name: 'spaces/dm123/messages/msg1',
+        text: 'Hello again!',
+        thread: { name: 'spaces/dm123/threads/thread1' },
+      };
+
+      mockChatAPI.spaces.setup.mockResolvedValue({
+        data: mockSpace,
+      });
+
+      mockChatAPI.spaces.messages.create.mockResolvedValue({
+        data: mockMessage,
+      });
+
+      const result = await chatService.sendDm({
+        email: 'user@example.com',
+        message: 'Hello again!',
+        threadName: 'spaces/dm123/threads/thread1',
+      });
+
+      expect(mockChatAPI.spaces.messages.create).toHaveBeenCalledWith({
+        parent: 'spaces/dm123',
+        messageReplyOption: 'REPLY_MESSAGE_FALLBACK_TO_NEW_THREAD',
+        requestBody: {
+          text: 'Hello again!',
+          thread: { name: 'spaces/dm123/threads/thread1' },
         },
       });
 

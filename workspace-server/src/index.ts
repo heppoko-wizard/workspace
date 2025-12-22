@@ -487,6 +487,7 @@ async function main() {
             inputSchema: {
                 spaceName: z.string().describe('The name of the space to send the message to (e.g., spaces/AAAAN2J52O8).'),
                 message: z.string().describe('The message to send.'),
+                threadName: z.string().optional().describe('The resource name of the thread to reply to. Example: "spaces/AAAAVJcnwPE/threads/IAf4cnLqYfg"'),
             }
         },
         chatService.sendMessage
@@ -515,6 +516,7 @@ async function main() {
             inputSchema: {
                 email: z.string().email().describe('The email address of the user to send the message to.'),
                 message: z.string().describe('The message to send.'),
+                threadName: z.string().optional().describe('The resource name of the thread to reply to. Example: "spaces/AAAAVJcnwPE/threads/IAf4cnLqYfg"'),
             }
         },
         chatService.sendDm

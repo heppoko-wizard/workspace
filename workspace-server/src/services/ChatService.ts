@@ -93,14 +93,16 @@ export class ChatService {
         }
     }
 
-    public sendMessage = async ({ spaceName, message }: { spaceName: string, message: string }) => {
-        logToFile(`Sending message to space: ${spaceName}`);
+    public sendMessage = async ({ spaceName, message, threadName }: { spaceName: string, message: string, threadName?: string }) => {
+        logToFile(`Sending message to space: ${spaceName}${threadName ? ` in thread: ${threadName}` : ''}`);
         try {
             const chat = await this.getChatClient();
             const response = await chat.spaces.messages.create({
                 parent: spaceName,
+                messageReplyOption: threadName ? 'REPLY_MESSAGE_FALLBACK_TO_NEW_THREAD' : undefined,
                 requestBody: {
                     text: message,
+                    thread: threadName ? { name: threadName } : undefined,
                 },
             });
             logToFile(`Successfully sent message to space: ${spaceName}`);
@@ -268,8 +270,8 @@ public getMessages = async ({ spaceName, unreadOnly, pageSize, pageToken, orderB
     }
 
 
-    public sendDm = async ({ email, message }: { email: string, message: string }) => {
-        logToFile(`chat.sendDm called with: email=${email}, message=${message}`);
+    public sendDm = async ({ email, message, threadName }: { email: string, message: string, threadName?: string }) => {
+        logToFile(`chat.sendDm called with: email=${email}, message=${message}${threadName ? `, threadName=${threadName}` : ''}`);
         try {
             const space = await this._setupDmSpace(email);
             const spaceName = space.name;
@@ -282,8 +284,10 @@ public getMessages = async ({ spaceName, unreadOnly, pageSize, pageToken, orderB
             // Send the message to the DM space.
             const messageResponse = await chat.spaces.messages.create({
                 parent: spaceName,
+                messageReplyOption: threadName ? 'REPLY_MESSAGE_FALLBACK_TO_NEW_THREAD' : undefined,
                 requestBody: {
                     text: message,
+                    thread: threadName ? { name: threadName } : undefined,
                 },
             });
 
