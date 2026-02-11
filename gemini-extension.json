@@ -1,6 +1,6 @@
 {
   "name": "google-workspace",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "contextFileName": "workspace-server${/}WORKSPACE-Context.md",
   "mcpServers": {
     "google-workspace": {

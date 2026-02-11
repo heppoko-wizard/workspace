@@ -14,6 +14,7 @@ const workspaceServerPackageJsonPath = path.join(
   'workspace-server',
   'package.json',
 );
+const geminiExtensionJsonPath = path.join(rootDir, 'gemini-extension.json');
 const workspaceServerIndexPath = path.join(
   rootDir,
   'workspace-server',
@@ -57,6 +58,7 @@ const main = () => {
   }
 
   updateJsonFile(workspaceServerPackageJsonPath, version);
+  updateJsonFile(geminiExtensionJsonPath, version);
 };
 
 main();

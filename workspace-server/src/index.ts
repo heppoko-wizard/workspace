@@ -69,6 +69,12 @@ async function main() {
     setLoggingEnabled(true);
   }
 
+  const readOnlyToolProps = {
+    annotations: {
+      readOnlyHint: true,
+    },
+  };
+
   const authManager = new AuthManager(SCOPES);
 
   // 2. Create the server instance
@@ -201,6 +207,7 @@ async function main() {
           .optional()
           .describe('The maximum number of results to return.'),
       },
+      ...readOnlyToolProps,
     },
     docsService.find,
   );
@@ -212,6 +219,7 @@ async function main() {
       inputSchema: {
         folderName: z.string().describe('The name of the folder to find.'),
       },
+      ...readOnlyToolProps,
     },
     driveService.findFolder,
   );
@@ -260,6 +268,7 @@ async function main() {
             'The ID of the tab to read. If not provided, returns all tabs.',
           ),
       },
+      ...readOnlyToolProps,
     },
     docsService.getText,
   );
@@ -311,6 +320,7 @@ async function main() {
       inputSchema: {
         url: z.string().describe('The URL of the Google Workspace document.'),
       },
+      ...readOnlyToolProps,
     },
     async (input: { url: string }) => {
       const result = extractDocId(input.url);
@@ -336,6 +346,7 @@ async function main() {
           .string()
           .describe('The ID or URL of the presentation to read.'),
       },
+      ...readOnlyToolProps,
     },
     slidesService.getText,
   );
@@ -356,6 +367,7 @@ async function main() {
           .optional()
           .describe('The maximum number of results to return.'),
       },
+      ...readOnlyToolProps,
     },
     slidesService.find,
   );
@@ -369,6 +381,7 @@ async function main() {
           .string()
           .describe('The ID or URL of the presentation.'),
       },
+      ...readOnlyToolProps,
     },
     slidesService.getMetadata,
   );
@@ -432,6 +445,7 @@ async function main() {
           .optional()
           .describe('Output format (default: text).'),
       },
+      ...readOnlyToolProps,
     },
     sheetsService.getText,
   );
@@ -447,6 +461,7 @@ async function main() {
           .string()
           .describe('The A1 notation range to get (e.g., "Sheet1!A1:B10").'),
       },
+      ...readOnlyToolProps,
     },
     sheetsService.getRange,
   );
@@ -467,6 +482,7 @@ async function main() {
           .optional()
           .describe('The maximum number of results to return.'),
       },
+      ...readOnlyToolProps,
     },
     sheetsService.find,
   );
@@ -478,6 +494,7 @@ async function main() {
       inputSchema: {
         spreadsheetId: z.string().describe('The ID or URL of the spreadsheet.'),
       },
+      ...readOnlyToolProps,
     },
     sheetsService.getMetadata,
   );
@@ -515,6 +532,7 @@ async function main() {
           .optional()
           .describe('Whether to search for files shared with the user.'),
       },
+      ...readOnlyToolProps,
     },
     driveService.search,
   );
@@ -541,6 +559,7 @@ async function main() {
     {
       description: "Lists all of the user's calendars.",
       inputSchema: {},
+      ...readOnlyToolProps,
     },
     calendarService.listCalendars,
   );
@@ -604,6 +623,7 @@ async function main() {
           .optional()
           .describe('The response status of the attendee.'),
       },
+      ...readOnlyToolProps,
     },
     calendarService.listEvents,
   );
@@ -621,6 +641,7 @@ async function main() {
             'The ID of the calendar the event belongs to. Defaults to the primary calendar.',
           ),
       },
+      ...readOnlyToolProps,
     },
     calendarService.getEvent,
   );
@@ -647,6 +668,7 @@ async function main() {
           .number()
           .describe('The duration of the meeting in minutes.'),
       },
+      ...readOnlyToolProps,
     },
     calendarService.findFreeTime,
   );
@@ -747,6 +769,7 @@ async function main() {
     {
       description: 'Lists the spaces the user is a member of.',
       inputSchema: {},
+      ...readOnlyToolProps,
     },
     chatService.listSpaces,
   );
@@ -760,6 +783,7 @@ async function main() {
           .string()
           .describe('The display name of the space to find.'),
       },
+      ...readOnlyToolProps,
     },
     chatService.findSpaceByName,
   );
@@ -819,6 +843,7 @@ async function main() {
           .optional()
           .describe('The order to list messages in (e.g., "createTime desc").'),
       },
+      ...readOnlyToolProps,
     },
     chatService.getMessages,
   );
@@ -854,6 +879,7 @@ async function main() {
           .email()
           .describe('The email address of the user to find the DM space with.'),
       },
+      ...readOnlyToolProps,
     },
     chatService.findDmByEmail,
   );
@@ -878,6 +904,7 @@ async function main() {
           .optional()
           .describe('The token for the next page of results.'),
       },
+      ...readOnlyToolProps,
     },
     chatService.listThreads,
   );
@@ -930,6 +957,7 @@ async function main() {
           .optional()
           .describe('Include messages from SPAM and TRASH (default: false).'),
       },
+      ...readOnlyToolProps,
     },
     gmailService.search,
   );
@@ -945,6 +973,7 @@ async function main() {
           .optional()
           .describe('Format of the message (default: full).'),
       },
+      ...readOnlyToolProps,
     },
     gmailService.get,
   );
@@ -1043,6 +1072,7 @@ There are a list of system labels that can be modified on a message:
     {
       description: "List all Gmail labels in the user's mailbox.",
       inputSchema: {},
+      ...readOnlyToolProps,
     },
     gmailService.listLabels,
   );
@@ -1078,6 +1108,7 @@ There are a list of system labels that can be modified on a message:
       description:
         'Gets the current date. Returns both UTC (for calendar/API use) and local time (for display to the user), along with the timezone.',
       inputSchema: {},
+      ...readOnlyToolProps,
     },
     timeService.getCurrentDate,
   );
@@ -1088,6 +1119,7 @@ There are a list of system labels that can be modified on a message:
       description:
         'Gets the current time. Returns both UTC (for calendar/API use) and local time (for display to the user), along with the timezone.',
       inputSchema: {},
+      ...readOnlyToolProps,
     },
     timeService.getCurrentTime,
   );
@@ -1098,6 +1130,7 @@ There are a list of system labels that can be modified on a message:
       description:
         'Gets the local timezone. Note: timezone is also included in getCurrentDate and getCurrentTime responses.',
       inputSchema: {},
+      ...readOnlyToolProps,
     },
     timeService.getTimeZone,
   );
@@ -1123,6 +1156,7 @@ There are a list of system labels that can be modified on a message:
           .optional()
           .describe('The name of the user to get profile information for.'),
       },
+      ...readOnlyToolProps,
     },
     peopleService.getUserProfile,
   );
@@ -1132,6 +1166,7 @@ There are a list of system labels that can be modified on a message:
     {
       description: 'Gets the profile information of the authenticated user.',
       inputSchema: {},
+      ...readOnlyToolProps,
     },
     peopleService.getMe,
   );
@@ -1155,6 +1190,7 @@ There are a list of system labels that can be modified on a message:
             'The type of relation to filter by (e.g., "manager", "spouse", "assistant"). If not provided, returns all relations.',
           ),
       },
+      ...readOnlyToolProps,
     },
     peopleService.getUserRelations,
   );
