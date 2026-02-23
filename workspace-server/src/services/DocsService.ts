@@ -24,6 +24,17 @@ import {
 export class DocsService {
   private purify: ReturnType<typeof createDOMPurify>;
 
+  /**
+   * Recursively flattens a tab tree into a single array,
+   * so that nested (child) tabs are included alongside top-level ones.
+   */
+  private _flattenTabs(tabs: docs_v1.Schema$Tab[]): docs_v1.Schema$Tab[] {
+    return tabs.flatMap((tab) => {
+      const children = tab.childTabs ? this._flattenTabs(tab.childTabs) : [];
+      return [tab, ...children];
+    });
+  }
+
   constructor(
     private authManager: AuthManager,
     private driveService: DriveService,
@@ -330,7 +341,7 @@ export class DocsService {
         includeTabsContent: true,
       });
 
-      const tabs = res.data.tabs || [];
+      const tabs = this._flattenTabs(res.data.tabs || []);
 
       // If tabId is provided, try to find it
       if (tabId) {
@@ -479,7 +490,7 @@ export class DocsService {
         includeTabsContent: true,
       });
 
-      const tabs = res.data.tabs || [];
+      const tabs = this._flattenTabs(res.data.tabs || []);
       let content: docs_v1.Schema$StructuralElement[] | undefined;
 
       if (tabId) {
@@ -588,7 +599,7 @@ export class DocsService {
         includeTabsContent: true,
       });
 
-      const tabs = docBefore.data.tabs || [];
+      const tabs = this._flattenTabs(docBefore.data.tabs || []);
 
       const requests: docs_v1.Schema$Request[] = [];
 

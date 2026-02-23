@@ -506,6 +506,114 @@ describe('DocsService', () => {
         index: 1,
       });
     });
+
+    it('should include text from nested child tabs', async () => {
+      const mockDoc = {
+        data: {
+          tabs: [
+            {
+              tabProperties: { tabId: 'parent-tab', title: 'Parent' },
+              documentTab: {
+                body: {
+                  content: [
+                    {
+                      paragraph: {
+                        elements: [{ textRun: { content: 'Parent Content' } }],
+                      },
+                    },
+                  ],
+                },
+              },
+              childTabs: [
+                {
+                  tabProperties: { tabId: 'child-tab', title: 'Child' },
+                  documentTab: {
+                    body: {
+                      content: [
+                        {
+                          paragraph: {
+                            elements: [
+                              { textRun: { content: 'Child Content' } },
+                            ],
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      };
+      mockDocsAPI.documents.get.mockResolvedValue(mockDoc);
+
+      const result = await docsService.getText({ documentId: 'test-doc-id' });
+      const parsed = JSON.parse(result.content[0].text);
+
+      expect(parsed).toHaveLength(2);
+      expect(parsed[0]).toEqual({
+        tabId: 'parent-tab',
+        title: 'Parent',
+        content: 'Parent Content',
+        index: 0,
+      });
+      expect(parsed[1]).toEqual({
+        tabId: 'child-tab',
+        title: 'Child',
+        content: 'Child Content',
+        index: 1,
+      });
+    });
+
+    it('should find a child tab by tabId', async () => {
+      const mockDoc = {
+        data: {
+          tabs: [
+            {
+              tabProperties: { tabId: 'parent-tab', title: 'Parent' },
+              documentTab: {
+                body: {
+                  content: [
+                    {
+                      paragraph: {
+                        elements: [{ textRun: { content: 'Parent Content' } }],
+                      },
+                    },
+                  ],
+                },
+              },
+              childTabs: [
+                {
+                  tabProperties: { tabId: 'child-tab', title: 'Child' },
+                  documentTab: {
+                    body: {
+                      content: [
+                        {
+                          paragraph: {
+                            elements: [
+                              { textRun: { content: 'Child Content' } },
+                            ],
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      };
+      mockDocsAPI.documents.get.mockResolvedValue(mockDoc);
+
+      const result = await docsService.getText({
+        documentId: 'test-doc-id',
+        tabId: 'child-tab',
+      });
+
+      expect(result.content[0].text).toBe('Child Content');
+    });
   });
 
   describe('appendText', () => {
@@ -604,6 +712,57 @@ describe('DocsService', () => {
                 location: {
                   index: 9,
                   tabId: 'tab-1',
+                },
+                text: ' Appended',
+              },
+            },
+          ],
+        },
+      });
+    });
+
+    it('should append text to a nested child tab by tabId', async () => {
+      const mockDoc = {
+        data: {
+          tabs: [
+            {
+              tabProperties: { tabId: 'parent-tab' },
+              documentTab: {
+                body: {
+                  content: [{ endIndex: 10 }],
+                },
+              },
+              childTabs: [
+                {
+                  tabProperties: { tabId: 'child-tab' },
+                  documentTab: {
+                    body: {
+                      content: [{ endIndex: 20 }],
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      };
+      mockDocsAPI.documents.get.mockResolvedValue(mockDoc);
+
+      await docsService.appendText({
+        documentId: 'test-doc-id',
+        text: ' Appended',
+        tabId: 'child-tab',
+      });
+
+      expect(mockDocsAPI.documents.batchUpdate).toHaveBeenCalledWith({
+        documentId: 'test-doc-id',
+        requestBody: {
+          requests: [
+            {
+              insertText: {
+                location: {
+                  index: 19,
+                  tabId: 'child-tab',
                 },
                 text: ' Appended',
               },
@@ -892,6 +1051,84 @@ describe('DocsService', () => {
               insertText: {
                 location: {
                   tabId: 'tab-1',
+                  index: 1,
+                },
+                text: 'Hi',
+              },
+            }),
+          ]),
+        },
+      });
+    });
+
+    it('should replace text in a nested child tab by tabId', async () => {
+      mockDocsAPI.documents.get.mockResolvedValue({
+        data: {
+          tabs: [
+            {
+              tabProperties: { tabId: 'parent-tab' },
+              documentTab: {
+                body: {
+                  content: [
+                    {
+                      paragraph: {
+                        elements: [{ textRun: { content: 'Parent text' } }],
+                      },
+                    },
+                  ],
+                },
+              },
+              childTabs: [
+                {
+                  tabProperties: { tabId: 'child-tab' },
+                  documentTab: {
+                    body: {
+                      content: [
+                        {
+                          paragraph: {
+                            elements: [
+                              { textRun: { content: 'Hello child!' } },
+                            ],
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      });
+
+      mockDocsAPI.documents.batchUpdate.mockResolvedValue({
+        data: { documentId: 'test-doc-id' },
+      });
+
+      await docsService.replaceText({
+        documentId: 'test-doc-id',
+        findText: 'Hello',
+        replaceText: 'Hi',
+        tabId: 'child-tab',
+      });
+
+      expect(mockDocsAPI.documents.batchUpdate).toHaveBeenCalledWith({
+        documentId: 'test-doc-id',
+        requestBody: {
+          requests: expect.arrayContaining([
+            expect.objectContaining({
+              deleteContentRange: {
+                range: {
+                  tabId: 'child-tab',
+                  startIndex: 1,
+                  endIndex: 6,
+                },
+              },
+            }),
+            expect.objectContaining({
+              insertText: {
+                location: {
+                  tabId: 'child-tab',
                   index: 1,
                 },
                 text: 'Hi',
