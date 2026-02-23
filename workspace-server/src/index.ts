@@ -595,6 +595,12 @@ async function main() {
           .array(z.string())
           .optional()
           .describe('The email addresses of the attendees.'),
+        sendUpdates: z
+          .enum(['all', 'externalOnly', 'none'])
+          .optional()
+          .describe(
+            'Whether to send notifications to attendees. Defaults to "all" if attendees are provided, otherwise "none".',
+          ),
       },
     },
     calendarService.createEvent,

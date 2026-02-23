@@ -17,6 +17,7 @@ export interface CreateEventInput {
   start: { dateTime: string };
   end: { dateTime: string };
   attendees?: string[];
+  sendUpdates?: 'all' | 'externalOnly' | 'none';
 }
 
 export interface ListEventsInput {
@@ -159,7 +160,15 @@ export class CalendarService {
   };
 
   createEvent = async (input: CreateEventInput) => {
-    const { calendarId, summary, description, start, end, attendees } = input;
+    const {
+      calendarId,
+      summary,
+      description,
+      start,
+      end,
+      attendees,
+      sendUpdates,
+    } = input;
 
     // Validate datetime formats
     try {
@@ -179,6 +188,16 @@ export class CalendarService {
     logToFile(`Event start: ${start.dateTime}`);
     logToFile(`Event end: ${end.dateTime}`);
     logToFile(`Event attendees: ${attendees?.join(', ')}`);
+
+    // Determine sendUpdates value
+    let finalSendUpdates = sendUpdates;
+    if (finalSendUpdates === undefined) {
+      finalSendUpdates = attendees?.length ? 'all' : 'none';
+    }
+    if (finalSendUpdates) {
+      logToFile(`Sending updates: ${finalSendUpdates}`);
+    }
+
     try {
       const event = {
         summary,
@@ -191,6 +210,7 @@ export class CalendarService {
       const res = await calendar.events.insert({
         calendarId: finalCalendarId,
         requestBody: event,
+        sendUpdates: finalSendUpdates,
       });
       logToFile(`Successfully created event: ${res.data.id}`);
       return {
