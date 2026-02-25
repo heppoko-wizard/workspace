@@ -19,6 +19,7 @@ import { TimeService } from './services/TimeService';
 import { PeopleService } from './services/PeopleService';
 import { SlidesService } from './services/SlidesService';
 import { SheetsService } from './services/SheetsService';
+import { TasksService } from './services/TasksService';
 import { GMAIL_SEARCH_MAX_RESULTS } from './utils/constants';
 import { extractDocId } from './utils/IdUtils';
 
@@ -58,6 +59,7 @@ const SCOPES = [
   'https://www.googleapis.com/auth/directory.readonly',
   'https://www.googleapis.com/auth/presentations.readonly',
   'https://www.googleapis.com/auth/spreadsheets.readonly',
+  'https://www.googleapis.com/auth/tasks',
 ];
 
 // Dynamically import version from package.json
@@ -103,6 +105,7 @@ async function main() {
   const timeService = new TimeService();
   const slidesService = new SlidesService(authManager);
   const sheetsService = new SheetsService(authManager);
+  const tasksService = new TasksService(authManager);
 
   // 3. Register tools directly on the server
   // Handle tool name normalization (dots to underscores) by default, or use dots if --use-dot-names is passed.
@@ -1207,6 +1210,146 @@ There are a list of system labels that can be modified on a message:
       ...readOnlyToolProps,
     },
     peopleService.getUserRelations,
+  );
+
+  // Tasks tools
+  server.registerTool(
+    'tasks.listTaskLists',
+    {
+      description: 'Lists all task lists.',
+      inputSchema: {},
+      ...readOnlyToolProps,
+    },
+    tasksService.listTaskLists,
+  );
+
+  server.registerTool(
+    'tasks.list',
+    {
+      description: 'Lists tasks in a task list.',
+      inputSchema: {
+        tasklistId: z
+          .string()
+          .optional()
+          .describe(
+            'The ID of the task list to list tasks from. Defaults to the default task list.',
+          ),
+        showCompleted: z
+          .boolean()
+          .optional()
+          .describe('Whether to show completed tasks. Defaults to false.'),
+        showDeleted: z
+          .boolean()
+          .optional()
+          .describe('Whether to show deleted tasks. Defaults to false.'),
+        showHidden: z
+          .boolean()
+          .optional()
+          .describe('Whether to show hidden tasks. Defaults to false.'),
+        dueMin: z
+          .string()
+          .optional()
+          .describe(
+            'Lower bound for a task\'s due date (as a RFC 3339 timestamp) to filter by. Optional.',
+          ),
+        dueMax: z
+          .string()
+          .optional()
+          .describe(
+            'Upper bound for a task\'s due date (as a RFC 3339 timestamp) to filter by. Optional.',
+          ),
+      },
+      ...readOnlyToolProps,
+    },
+    tasksService.listTasks,
+  );
+
+  server.registerTool(
+    'tasks.create',
+    {
+      description: 'Creates a new task.',
+      inputSchema: {
+        tasklistId: z
+          .string()
+          .optional()
+          .describe(
+            'The ID of the task list to create the task in. Defaults to the default task list.',
+          ),
+        title: z.string().describe('The title of the task.'),
+        notes: z.string().optional().describe('Notes for the task.'),
+        due: z
+          .string()
+          .optional()
+          .describe('The due date of the task (RFC 3339 timestamp).'),
+        status: z
+          .enum(['needsAction', 'completed'])
+          .optional()
+          .describe('The status of the task. Defaults to "needsAction".'),
+      },
+    },
+    tasksService.createTask,
+  );
+
+  server.registerTool(
+    'tasks.update',
+    {
+      description: 'Updates an existing task.',
+      inputSchema: {
+        taskId: z.string().describe('The ID of the task to update.'),
+        tasklistId: z
+          .string()
+          .optional()
+          .describe(
+            'The ID of the task list containing the task. Defaults to the default task list.',
+          ),
+        title: z.string().optional().describe('The new title of the task.'),
+        notes: z.string().optional().describe('The new notes for the task.'),
+        due: z
+          .string()
+          .optional()
+          .describe('The new due date of the task (RFC 3339 timestamp).'),
+        status: z
+          .enum(['needsAction', 'completed'])
+          .optional()
+          .describe('The new status of the task.'),
+      },
+    },
+    tasksService.updateTask,
+  );
+
+  server.registerTool(
+    'tasks.delete',
+    {
+      description: 'Deletes a task.',
+      inputSchema: {
+        taskId: z.string().describe('The ID of the task to delete.'),
+        tasklistId: z
+          .string()
+          .optional()
+          .describe(
+            'The ID of the task list containing the task. Defaults to the default task list.',
+          ),
+      },
+    },
+    tasksService.deleteTask,
+  );
+
+  server.registerTool(
+    'tasks.get',
+    {
+      description: 'Gets details of a specific task.',
+      inputSchema: {
+        taskId: z.string().describe('The ID of the task to get.'),
+        tasklistId: z
+          .string()
+          .optional()
+          .describe(
+            'The ID of the task list containing the task. Defaults to the default task list.',
+          ),
+      },
+      ...readOnlyToolProps,
+    },
+    tasksService.getTask,
   );
 
   // 4. Connect the transport layer and start listening
